@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -33,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean check = false;
 
+    private long startTime; //산책 시작 시간
+    private long endTime; //산책 종료 시간
+    private long durationTimeSec; //산책 걸린 시간
+
     private RetrofitService retrofitAPI;
 
     @Override
@@ -46,27 +51,43 @@ public class MainActivity extends AppCompatActivity {
         final LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://43.200.60.0:8080/")
+//                .baseUrl("http://43.200.60.0:8080/")
+                .baseUrl("http://10.0.2.2:8080/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         retrofitAPI = retrofit.create(RetrofitService.class);
 
+        button1.setBackgroundColor(Color.BLUE);
+
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(check){
-                    button1.setText("중지중");
+                    endTime = System.currentTimeMillis(); // 산책 종료 시간 측정
+                    durationTimeSec = endTime - startTime; // 종료 시간 - 시작 시간 = 걸린 시간
+                    System.out.println("startTime: " + startTime);
+                    System.out.println("endTime: " + endTime);
+                    System.out.println(durationTimeSec + "m/s");
+                    System.out.println((durationTimeSec/1000) + "sec");
+                    startTime = 0; //시작 시간 초기화
+                    endTime = 0; //종료 시간 초기화
+                    durationTimeSec = 0; //걸린 시간 초기화
+
+                    button1.setText("산책 시작");
+                    button1.setBackgroundColor(Color.BLUE);
                     check = false;
                     lm.removeUpdates(gpsLocationListener);
                 }else {
-                    button1.setText("실행중");
+                    startTime = System.currentTimeMillis(); // 산책 시작 시간 측정
+                    button1.setText("산책 종료");
+                    button1.setBackgroundColor(Color.RED);
                     if (Build.VERSION.SDK_INT >= 23 &&
                             ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                                 0);
                     } else {
-                        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 10, gpsLocationListener);
+                        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5, 0, gpsLocationListener);
 //                        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, gpsLocationListener);
 
 //                    if(lm != null) {
@@ -107,17 +128,18 @@ public class MainActivity extends AppCompatActivity {
 //                    "고도  : " + altitude);
             gpsDto = new GPSDto(latitude, longitude, altitude);
 
-            Call<GPSDto> setGPS = retrofitAPI.setGPS(gpsDto);
-            setGPS.enqueue(new Callback<GPSDto>() {
+            Call<Long> setGPS = retrofitAPI.setGPS(gpsDto);
+            setGPS.enqueue(new Callback<Long>() {
                 @Override
-                public void onResponse(Call<GPSDto> call, Response<GPSDto> response) {
+                public void onResponse(Call<Long> call, Response<Long> response) {
                     if(response.isSuccessful()){
-                        GPSDto result = response.body();
+                        Long result = response.body();
+                        Log.d("result", "result: " + result);
                     }
                 }
 
                 @Override
-                public void onFailure(Call<GPSDto> call, Throwable t) {
+                public void onFailure(Call<Long> call, Throwable t) {
                     t.printStackTrace();
                 }
             });

@@ -9,7 +9,7 @@
 
     <Button
         android:id="@+id/button1"
-        android:text="내 위치정보 가져오기"
+        android:text="산책 시작"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

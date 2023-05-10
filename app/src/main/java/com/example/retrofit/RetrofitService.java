@@ -8,5 +8,5 @@ import retrofit2.http.POST;
 
 public interface RetrofitService {
     @POST("api/gps")
-    Call<GPSDto> setGPS(@Body GPSDto gps);
+    Call<Long> setGPS(@Body GPSDto gps);
 }
