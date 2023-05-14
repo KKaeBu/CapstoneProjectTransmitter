@@ -5,13 +5,11 @@ import androidx.annotation.NonNull;
 import com.google.gson.annotations.SerializedName;
 
 public class GPSDto {
-    private Long id;
     private double latitude;
     private double longitude;
     private double altitude;
 
     public GPSDto(double latitude, double longitude, double altitude) {
-        this.id = Long.valueOf(1);
         this.latitude = latitude;
         this.longitude = longitude;
         this.altitude = altitude;
