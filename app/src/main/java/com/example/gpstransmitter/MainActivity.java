@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,9 +17,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.dto.ActivityDto;
+import com.example.dto.WalkDto;
 import com.example.dto.GPSDto;
 import com.example.retrofit.RetrofitService;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -33,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Button button1;
     private TextView txtResult;
     private GPSDto gpsDto;
-    private ActivityDto activityDto;
+    private WalkDto walkDto;
 
     private boolean check = false;
 
@@ -42,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private long durationTimeSec; //산책 걸린 시간
 
     private RetrofitService retrofitAPI;
+
+    //private ConcurrentHashMap<String, List<GPSDto>> pingList;
+    private List<GPSDto> pingList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,8 +131,15 @@ public class MainActivity extends AppCompatActivity {
 
     // 산책 종료시
     public void PostEndOfWalk(long durationTime) {
-        activityDto = new ActivityDto(durationTime);
-        Call<Void> endOfWalk = retrofitAPI.endOfWalk(activityDto);
+        walkDto = new WalkDto(
+                "산책로1",
+                durationTime,
+                1,
+                20,
+                pingList,
+                new Date()
+        );
+        Call<Void> endOfWalk = retrofitAPI.endOfWalk(walkDto);
         endOfWalk.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -154,6 +169,13 @@ public class MainActivity extends AppCompatActivity {
 //                    "경도 : " + longitude + "\n" +
 //                    "고도  : " + altitude);
             gpsDto = new GPSDto(latitude, longitude, altitude);
+
+//            String key = "ping_list";
+//            List<GPSDto> pl = pingList.getOrDefault(key, new ArrayList<>());
+//            pl.add(gpsDto);
+//            pingList.put(key, pl);
+
+            pingList.add(gpsDto);
 
             Call<Long> setGPS = retrofitAPI.setGPS(gpsDto);
             setGPS.enqueue(new Callback<Long>() {

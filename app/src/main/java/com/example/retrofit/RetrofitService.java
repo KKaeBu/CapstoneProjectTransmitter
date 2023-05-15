@@ -1,6 +1,6 @@
 package com.example.retrofit;
 
-import com.example.dto.ActivityDto;
+import com.example.dto.WalkDto;
 import com.example.dto.GPSDto;
 
 import retrofit2.Call;
@@ -15,5 +15,5 @@ public interface RetrofitService {
     Call<Void> savePing(@Body GPSDto gps);
 
     @POST("api/end")
-    Call<Void> endOfWalk(@Body ActivityDto activityDto);
+    Call<Void> endOfWalk(@Body WalkDto activityDto);
 }
