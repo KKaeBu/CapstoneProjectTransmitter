@@ -14,6 +14,6 @@ public interface RetrofitService {
     @POST("api/pings")
     Call<Void> savePing(@Body GPSDto gps);
 
-    @POST("api/end")
-    Call<Void> endOfWalk(@Body WalkDto activityDto);
+    @POST("api/pets/1/walk")
+    Call<Void> endOfWalk(@Body WalkDto walkDto);
 }

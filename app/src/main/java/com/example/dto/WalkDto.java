@@ -7,15 +7,15 @@ public class WalkDto {
     private String roadMapName;
     private long walkedTime;
     private float travelDistance;
-    private int burnedCaloried;
+    private int burnedCalies;
     private List<GPSDto> pingList;
-    private Date walkDate;
+    private String walkDate;
 
-    public WalkDto(String roadMapName, long walkedTime, float travelDistance, int burnedCaloried, List<GPSDto> pingList, Date walkDate) {
+    public WalkDto(String roadMapName, long walkedTime, float travelDistance, int burnedCalies, List<GPSDto> pingList, String walkDate) {
         this.roadMapName = roadMapName;
         this.walkedTime = walkedTime;
         this.travelDistance = travelDistance;
-        this.burnedCaloried = burnedCaloried;
+        this.burnedCalies = burnedCalies;
         this.pingList = pingList;
         this.walkDate = walkDate;
     }
@@ -24,7 +24,12 @@ public class WalkDto {
     @Override
     public String toString() {
         return "PostResult{" +
-                "durationTime=" +
+                "roadMapName=" +roadMapName + ", " +
+                "walkedTime= " + walkedTime + ", " +
+                "travelDistance= " + travelDistance + ", " +
+                "burnedCaloried= " + burnedCalies + ", " +
+                "pingList= " + pingList + ", " +
+                "walkDate= " + walkDate +
                 "}";
     }
 
