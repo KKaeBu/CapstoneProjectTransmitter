@@ -14,10 +14,13 @@ public class MainActivity extends AppCompatActivity {
     private Button button1;
     private TextView txtResult;
     private boolean check = false;
+    public static MainActivity instance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        instance = this;
+
         setContentView(R.layout.activity_main);
 
         button1 = (Button)findViewById(R.id.button1);
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startTransfer() {
+        // BackgroundService 인스턴스 생성 시 MainActivity 인스턴스 전달
         Intent serviceIntent = new Intent(this, BackgroundService.class);
         startService(serviceIntent);
 

@@ -1,6 +1,5 @@
 package com.example.gpstransmitter;
 
-import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -15,6 +15,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.dto.GPSDto;
 import com.example.retrofit.RetrofitService;
@@ -32,11 +33,13 @@ public class BackgroundService extends Service {
     private GPSDto gpsDto;
     private RetrofitService retrofitAPI;
     private LocationManager lm;
+    private MainActivity mainActivity;
 
     @Override
     public void onCreate() {
         Log.i("onCreate", "onCreate 시작");
         super.onCreate();
+
         handler = new Handler();
         lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -52,6 +55,9 @@ public class BackgroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i("onStartCommand", "onStartCommand 시작");
+        super.onStartCommand(intent, flags, startId);
+        mainActivity = MainActivity.instance;
+
         startTransmitGPS();
         return START_STICKY;
     }
@@ -79,6 +85,11 @@ public class BackgroundService extends Service {
                 locationUpdate();
             }
         };
+
+
+        // Runnable을 실행하는 Thread 생성 및 시작
+        Thread thread = new Thread(runnable);
+        thread.start();
     }
 
     private void stopTransmitGPS() {
@@ -86,21 +97,6 @@ public class BackgroundService extends Service {
 
         lm.removeUpdates(gpsLocationListener);
         handler.removeCallbacks(runnable);
-    }
-
-    private void locationUpdate() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, gpsLocationListener);
-
     }
 
     final LocationListener gpsLocationListener = new LocationListener() {
@@ -119,11 +115,12 @@ public class BackgroundService extends Service {
             setGPS.enqueue(new Callback<Long>() {
                 @Override
                 public void onResponse(Call<Long> call, Response<Long> response) {
-                    if(response.isSuccessful()){
+                    if (response.isSuccessful()) {
                         Long result = response.body();
                         Log.d("result", "result: " + result);
                     }
                 }
+
                 @Override
                 public void onFailure(Call<Long> call, Throwable t) {
                     t.printStackTrace();
@@ -142,4 +139,36 @@ public class BackgroundService extends Service {
         public void onProviderDisabled(String provider) {
         }
     };
+
+//    private void locationUpdate() {
+//        if (Build.VERSION.SDK_INT >= 23 &&
+//                ContextCompat.checkSelfPermission(mainActivity , android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(mainActivity, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+//                    0);
+//        } else {
+//            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 0, gpsLocationListener);
+//        }
+//    }
+    private void locationUpdate() {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(mainActivity , android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ActivityCompat.requestPermissions(mainActivity, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+                }
+            });
+        } else {
+            mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 0, gpsLocationListener);
+                    } catch (SecurityException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
 }
