@@ -17,15 +17,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.dto.WalkDto;
 import com.example.dto.GPSDto;
 import com.example.retrofit.RetrofitService;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,13 +29,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
 
     private Button button1;
-    private TextView txtResult;
+    //    private TextView txtResult;
+
+    double longitude = 0.0;
+    double latitude = 0.0;
+    double altitude = 0.0;
+//    Location location = null;
+    RetrofitService retrofitAPI = null;
+
     private GPSDto gpsDto;
+
     private boolean check = false;
-
-
-    private RetrofitService retrofitAPI;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         button1 = (Button)findViewById(R.id.button1);
-        txtResult = (TextView)findViewById(R.id.txtResult);
+//        txtResult = (TextView)findViewById(R.id.txtResult);
 
         final LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
@@ -80,8 +77,11 @@ public class MainActivity extends AppCompatActivity {
                         ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                                 0);
                     } else {
-                        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 0, gpsLocationListener);
-//                        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, gpsLocationListener);
+                        // 위치정보를 원하는 시간, 거리마다 갱신해준다.
+                        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                30000,
+                                7,
+                                gpsLocationListener);
                     }
                     check = true;
                 }
@@ -89,34 +89,33 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-
     final LocationListener gpsLocationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
+            if (location != null) {
+                latitude = Math.floor(location.getLatitude()*1000000)/1000000.0;
+                longitude = Math.floor(location.getLongitude()*1000000)/1000000.0;
+                altitude = location.getAltitude();
 
-            String provider = location.getProvider();
-            double longitude = location.getLongitude();
-            double latitude = location.getLatitude();
-            double altitude = location.getAltitude();
+                gpsDto = new GPSDto(latitude, longitude, altitude);
 
-            gpsDto = new GPSDto(latitude, longitude, altitude);
-
-            Call<Long> setGPS = retrofitAPI.setGPS(gpsDto);
-            setGPS.enqueue(new Callback<Long>() {
-                @Override
-                public void onResponse(Call<Long> call, Response<Long> response) {
-                    if(response.isSuccessful()){
-                        Long result = response.body();
-                        Log.d("result", "result: " + result);
+                Call<Long> setGPS = retrofitAPI.setGPS(gpsDto);
+                setGPS.enqueue(new Callback<Long>() {
+                    @Override
+                    public void onResponse(Call<Long> call, Response<Long> response) {
+                        if (response.isSuccessful()) {
+                            Long result = response.body();
+                            Log.d("result", "result: " + result);
+                        }
                     }
-                }
 
-                @Override
-                public void onFailure(Call<Long> call, Throwable t) {
-                    t.printStackTrace();
-                }
-            });
+                    @Override
+                    public void onFailure(Call<Long> call, Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
 
-            gpsDto = null;
+                gpsDto = null;
+            }
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {
