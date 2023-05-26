@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         // 위치정보를 원하는 시간, 거리마다 갱신해준다.
                         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                                30000,
+                                10000,
                                 7,
                                 gpsLocationListener);
                     }
